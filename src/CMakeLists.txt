@@ -1,1 +1,6 @@
-
+file(GLOB children "${CMAKE_CURRENT_SOURCE_DIR}/*")
+foreach(child ${children})
+    if(IS_DIRECTORY ${child})
+        add_subdirectory(${child})
+    endif()
+endforeach()
