@@ -5,39 +5,69 @@
 #include <thread>
 #include <iostream>
 #include <string>
+#include <mutex>
+#include <memory>
 
 
-auto printer(Runloop& loop, const std::string &message, int interval) {
-    return [&loop, message, interval] {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        while (loop.running()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-            loop.invoke([&message] {
-                std::cout << message << std::this_thread::get_id() << std::endl;
+class Task {
+public:
+    Task(Runloop &loop)
+            : _loop(loop),
+              alive(true),
+              thread(
+                      [this]() {
+                          std::cout << "Task: Doing some work" << std::endl;
+                          std::this_thread::sleep_for(std::chrono::seconds(2));
+                          onDone();
+                      }) {
+
+    }
+
+    ~Task() {
+        std::cout << "Task::~Task" << std::endl;
+        std::lock_guard<std::mutex> lock(mutex);
+        alive = false;
+        thread.detach();
+    }
+
+    void onDone() {
+        std::cout << "Task::~onDone" << std::endl;
+        std::lock_guard<std::mutex> lock(mutex);
+        if (alive) {
+            _loop.invoke([] {
+                std::cout << "Done" << std::endl;
             });
         }
-    };
-}
+    }
+
+private:
+    Runloop &_loop;
+    bool alive;
+    std::mutex mutex;
+    std::thread thread;
+};
 
 int main() {
 
     std::cout << "Starting loop on: " << std::this_thread::get_id() << std::endl;
     Runloop runloop;
+    
+    std::vector<std::unique_ptr<Task>> tasks;
 
-    std::thread t1(printer(runloop, "A: ", 5));
-    std::thread t2(printer(runloop, "B: ", 2));
-    std::thread t3(printer(runloop, "B: ", 1));
+    tasks.push_back(std::make_unique<Task>(runloop));
 
-    std::thread ts([&] {
+    runloop.invoke([&] {
+        std::cout << "Doing some heavy processing" << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        std::cout << "Canceling outstanding tasks" << std::endl;
+        tasks.clear();
+
+        std::cout << "Stopping runLoop" << std::endl;
         runloop.stop();
     });
 
     runloop.run();
 
     std::cout << "End of loop" << std::endl;
-    t1.join();
-    t2.join();
-    t3.join();
-    ts.join();
 }
