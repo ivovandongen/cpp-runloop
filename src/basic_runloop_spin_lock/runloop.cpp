@@ -22,7 +22,7 @@ public:
         std::atomic_bool &_locked;
     };
 
-    inline Guard aquire() {
+    inline Guard acquire() {
         return {_locked};
     }
 
@@ -66,18 +66,22 @@ Runloop::~Runloop() {
 void Runloop::run() {
     _running = true;
 
+    std::queue<std::shared_ptr<WorkTask>> tmp;
+    std::shared_ptr<WorkTask> task;
+
     while (_running) {
-        std::queue<WorkTask> tmp;
         {
-            auto guard = _impl->lock().aquire();
-            tmp = std::move(_queue);
+            auto guard = _impl->lock().acquire();
+            tmp.swap(_queue);
         }
-        
+
         while (!tmp.empty()) {
-            tmp.front()();
+            if ((task = tmp.front())) {
+                (*task)();
+            }
             tmp.pop();
         }
-        
+
         _impl->wait();
     }
 }
@@ -90,8 +94,8 @@ void Runloop::stop() {
 }
 
 void Runloop::invoke(WorkTask &&fn) {
-    auto guard = _impl->lock().aquire();
-    _queue.push(std::move(fn));
+    auto guard = _impl->lock().acquire();
+    _queue.push(std::make_shared<WorkTask>(std::move(fn)));
     wake();
 }
 

@@ -51,10 +51,12 @@ int main() {
 
     std::cout << "Starting loop on: " << std::this_thread::get_id() << std::endl;
     Runloop runloop;
-    
+
     std::vector<std::unique_ptr<Task>> tasks;
 
-    tasks.push_back(std::make_unique<Task>(runloop));
+    for (size_t i = 0; i < 500; i++) {
+        tasks.push_back(std::make_unique<Task>(runloop));
+    }
 
     runloop.invoke([&] {
         std::cout << "Doing some heavy processing" << std::endl;

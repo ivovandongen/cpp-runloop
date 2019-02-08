@@ -42,6 +42,6 @@ private:
 
     std::unique_ptr<Impl> _impl;
 
-    std::queue<WorkTask> _queue;
+    std::queue<std::shared_ptr<WorkTask>> _queue;
     std::atomic_bool _running{false};
 };
