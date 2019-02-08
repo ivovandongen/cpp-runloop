@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(CPP_RUNLOOP)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_C_STANDARD 99)
 
 # Update submodules as needed
 option(GIT_SUBMODULE "Check submodules during build" ON)
