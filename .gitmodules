@@ -1,3 +1,6 @@
 [submodule "deps/asio"]
 	path = deps/asio
 	url = git@github.com:chriskohlhoff/asio.git
+[submodule "deps/libcds"]
+	path = deps/libcds
+	url = git@github.com:khizmax/libcds.git
