@@ -4,3 +4,6 @@
 [submodule "deps/libcds"]
 	path = deps/libcds
 	url = git@github.com:khizmax/libcds.git
+[submodule "deps/ck"]
+	path = deps/ck
+	url = git@github.com:concurrencykit/ck.git
